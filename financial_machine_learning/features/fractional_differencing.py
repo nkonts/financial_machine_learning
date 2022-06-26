@@ -6,6 +6,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+CRITICAL_VALUES = {
+    '1%': -3.43181,
+    '5%': -2.86218,
+    '10%': -2.56711
+    }
+
 def get_weights(order: float, lags: int) -> List[float]:
     """Calculate the weights from the series expansion of the differencing operator
     for orders d up to lags coefficients.
@@ -42,7 +48,7 @@ def plot_weights(d_range: Tuple[float, float], lags: int, number_plots: int) -> 
     plt.xlabel('lag coefficients')
     plt.show()
 
-def differencing(series: pd.Series, order: float, lag_cutoff: int) -> List[float]:
+def differencing(series: pd.Series, order: float, lag_cutoff: int) -> pd.Series:
     """Returns the fractional difference of a series for a given order and cuttoff
     of the infinite series
 
@@ -52,7 +58,7 @@ def differencing(series: pd.Series, order: float, lag_cutoff: int) -> List[float
         lag_cutoff (int): The cuttoff for the infinite series expansion
 
     Returns:
-        List[float]: The fractional difference of the series.
+        pd.Series: The fractional difference of the series.
     """
     weights = get_weights(order, lag_cutoff)
     res = 0
@@ -81,7 +87,7 @@ def cutoff_find(order: float, tau: float=1e-4, start_lags: int=1) -> int:
         lags += 1
     return lags
 
-def differencing_tau(series: pd.Series, order: float, tau: float=1e-4) -> List[float]:
+def differencing_tau(series: pd.Series, order: float, tau: float=1e-4) -> pd.Series:
     """Returns the fractional difference of a series for a given order
     of the infinite series stopping once the weights are smaller than tau.
 
@@ -91,11 +97,11 @@ def differencing_tau(series: pd.Series, order: float, tau: float=1e-4) -> List[f
         tau (float): Threshold value to drop non-significant weights. Defaults to 1e-4.
 
     Returns:
-        List[float]: The fractional difference of the series.
+        pd.Series: The fractional difference of the series.
     """
     lag_cutoff = cutoff_find(order, tau, 1) #finding lag cutoff with tau
     weights = get_weights(order, lag_cutoff)
-    res=0
+    res = 0
     for k in range(lag_cutoff):
         res += weights[k]*series.shift(k).fillna(0)
     return res[lag_cutoff:]
